@@ -1,1 +1,1 @@
-random 版本
+value function 版本
