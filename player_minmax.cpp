@@ -3,8 +3,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <array>
+#include <limits>
 
 enum SPOT_STATE {
+    NOT_IMPORT = -1,
     EMPTY = 0,
     BLACK = 1,
     WHITE = 2
@@ -22,35 +24,39 @@ void read_board(std::ifstream& fin) {
         }
     }
 }
-int discs_value(array<std::array<int, SIZE>, SIZE> &tboard,int x,int y,int state,int opponent_state)
+float discs_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,int y,int state,int opponent_state)
 {
-    int value=0;
+    float value=0;
     if(tboard[x][y]==state)
     {
         //¾î
         int t;
         for(t=x;t<SIZE&&tboard[t][y]==state;t++)
             ;
-        if(t-x>=3)
+        if(t-x==3)
             value+=1;
-        if(t-x>=5)
-            return INT_MAX;
+        else if(t-x==4)
+            value+=5;
+        else if(t-x==5)
+            return std::numeric_limits<float>::max();
         //½Ý
-        int t;
         for(t=y;t<SIZE&&tboard[x][t]==state;t++)
             ;
-        if(t-y>=3)
+        if(t-y==3)
             value+=1;
-        if(t-y>=5)
-            return INT_MAX;
+        else if(t-y==4)
+            value+=5;
+        else if(t-y==5)
+            return std::numeric_limits<float>::max();
         //±×
-        int t;
         for(t=0;t+y<SIZE&&t+x<SIZE&&tboard[x+t][y+t]==state;t++)
             ;
-        if(t>=3)
+        if(t==3)
             value+=1;
-        if(t>=5)
-            return INT_MAX;
+        else if(t==4)
+            value+=5;
+        else if(t==5)
+            return std::numeric_limits<float>::max();
     }
     if(tboard[x][y]==opponent_state)
     {
@@ -58,36 +64,43 @@ int discs_value(array<std::array<int, SIZE>, SIZE> &tboard,int x,int y,int state
         int t;
         for(t=x;t<SIZE&&tboard[t][y]==opponent_state;t++)
             ;
-        if(t-x>=4)
+        if(t-x==3)
             value-=1;
-        if(t-x>=5)
-            return INT_MIN;
+        else if(t-x==4)
+            value-=5;
+        else if(t-x==5)
+            return std::numeric_limits<float>::min();
         //½Ý
-        int t;
         for(t=y;t<SIZE&&tboard[x][t]==opponent_state;t++)
             ;
-        if(t-y>=4)
+        if(t-y==3)
             value-=1;
-        if(t-y>=5)
-            return INT_MIN;
+        else if(t-y==4)
+            value-=5;
+        else if(t-y==5)
+            return std::numeric_limits<float>::min();
         //±×
-        int t;
         for(t=0;t+y<SIZE&&t+x<SIZE&&tboard[x+t][y+t]==opponent_state;t++)
             ;
-        if(t>=4)
+        if(t==3)
             value-=1;
-        if(t>=5)
-            return INT_MIN;
+        else if(t==4)
+            value-=5;
+        else if(t==5)
+            return std::numeric_limits<float>::min();
     }
     return value;
 }
 
-int value_fun(array<std::array<int, SIZE>, SIZE> &tboard,int state,int opponent_state)
+float value_fun(std::array<std::array<int, SIZE>, SIZE> &tboard,int state,int opponent_state)
 {
-    int value=0;
+    float value=0;
     for (int i = 0; i < SIZE; i++) {
         for (int j = 0; j < SIZE; j++) {
-            value+=discs_value(tboard,i,j,state,opponent_state);
+            float t=discs_value(tboard,i,j,state,opponent_state);
+            if(t==std::numeric_limits<float>::min()||t==std::numeric_limits<float>::max())
+                return t;
+            value+=t;
         }
     }
     return value;
@@ -96,7 +109,7 @@ enum MINMAXFIND_STATE {
     FINDMAX = 0,
     FINDMIN = 1,
 };
-int minmax_find(array<std::array<int, SIZE>, SIZE> &tboard,int depth,int minmaxmode,int state)
+float minmax_find(std::array<std::array<int, SIZE>, SIZE> &tboard,int depth,int minmaxmode,int state)
 {
     if(depth==0)
         return value_fun(tboard,player,3-player);
@@ -104,7 +117,7 @@ int minmax_find(array<std::array<int, SIZE>, SIZE> &tboard,int depth,int minmaxm
     int y = (rand() % SIZE);
     int tx=x;
     int ty=y;
-    int minmaxvalue;
+    float minmaxvalue;
     if(minmaxmode==FINDMAX)
         minmaxvalue=INT_MIN;
     else
@@ -114,7 +127,7 @@ int minmax_find(array<std::array<int, SIZE>, SIZE> &tboard,int depth,int minmaxm
         if(board[tx][ty] == EMPTY)
         {
             board[tx][ty]=state;
-            int tv=minmax_find(tboard,depth-1,2-minmaxmode,3-state);
+            int tv=minmax_find(tboard,depth-1,1-minmaxmode,3-state);
             board[tx][ty]=EMPTY;
             if(minmaxmode==FINDMAX)
             {
@@ -162,11 +175,11 @@ void write_valid_spot(std::ofstream& fout) {
         if (board[tx][ty] == EMPTY)
         {
             board[tx][ty]=player;
-            int tv=minmax_find(tboard,depth-1,2-minmaxmode,3-player);
+            int tv=minmax_find(board,depth-1,1-minmaxmode,3-player);
             board[tx][ty]=EMPTY;
-            if(tv>minmaxvalue)
+            if(tv>maxvalue)
             {
-                minmaxvalue=tv;
+                maxvalue=tv;
                 fout << tx << " " << ty << std::endl;
                 fout.flush();
             }
@@ -180,7 +193,10 @@ void write_valid_spot(std::ofstream& fout) {
                 ty=0;
         }
         if(tx==x&&ty==y)
+        {
             depth++;
+            std::cout<<depth<<std::endl;
+        }
     }
 }
 
