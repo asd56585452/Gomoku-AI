@@ -1,1 +1,1 @@
-minmax_value function 版本
+alpha-beta pruning 版本

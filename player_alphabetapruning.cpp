@@ -89,7 +89,23 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
 
         for(t=0;t+y<SIZE&&t+x<SIZE&&tboard[x+t][y+t]==state;t++)
             ;
-        for(t=0;t+y>=0&&t+x>=0&&tboard[x+t][y+t]==state;t--)
+        for(tt=0;tt+y>=0&&tt+x>=0&&tboard[x+tt][y+tt]==state;tt--)
+            ;
+        if(t-tt-1==3)
+            value+=1;
+        else if(t-tt-1==4)
+        {
+            if(tt==-1||t==1)
+            value+=4;
+            else
+            value+=5;
+        }
+        else if(t-tt-1==5)
+            return INT_MAX;
+
+        for(t=0;t+y<SIZE&&t+x<SIZE&&tboard[x+t][y-t]==state;t++)
+            ;
+        for(tt=0;tt+y>=0&&tt+x>=0&&tboard[x+tt][y-tt]==state;tt--)
             ;
         if(t-tt-1==3)
             value+=1;
@@ -141,7 +157,23 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
 
         for(t=0;t+y<SIZE&&t+x<SIZE&&tboard[x+t][y+t]==opponent_state;t++)
             ;
-        for(t=0;t+y>=0&&t+x>=0&&tboard[x+t][y+t]==opponent_state;t--)
+        for(tt=0;tt+y>=0&&tt+x>=0&&tboard[x+tt][y+tt]==opponent_state;tt--)
+            ;
+        if(t-tt-1==3)
+            value-=1;
+        else if(t-tt-1==4)
+        {
+            if(tt==-1||t==1)
+            value-=4;
+            else
+            value-=5;
+        }
+        else if(t-tt-1==5)
+            return INT_MIN;
+
+        for(t=0;t+y<SIZE&&t+x<SIZE&&tboard[x+t][y-t]==opponent_state;t++)
+            ;
+        for(tt=0;tt+y>=0&&tt+x>=0&&tboard[x+tt][y-tt]==opponent_state;tt--)
             ;
         if(t-tt-1==3)
             value-=1;
@@ -242,14 +274,14 @@ enum MINMAXFIND_STATE {
     FINDMAX = 0,
     FINDMIN = 1,
 };
-int minmax_find(std::array<std::array<int, SIZE>, SIZE> &tboard,int depth,int minmaxmode,int state,int ox,int oy,int board_value)
+int minmax_find(std::array<std::array<int, SIZE>, SIZE> &tboard,int depth,int minmaxmode,int state,int ox,int oy,int board_value,int a,int b)
 {
     int tv=discs_increase_value(tboard,ox,oy,player,3-player);
-    if(0)
+    /*if(0)
     {
        print_board(board);
        std::cout<<ox<<" "<<oy<<" "<<tv<<std::endl;
-    }
+    }*/
     if(tv==INT_MIN||tv==INT_MAX)
         return tv;
     board_value+=tv;
@@ -276,7 +308,7 @@ int minmax_find(std::array<std::array<int, SIZE>, SIZE> &tboard,int depth,int mi
                     import_board[ti][tj]+=1;
                 }
             }
-            int tv=minmax_find(tboard,depth-1,1-minmaxmode,3-state,tx,ty,board_value);
+            int tv=minmax_find(tboard,depth-1,1-minmaxmode,3-state,tx,ty,board_value,a,b);
             board[tx][ty]=EMPTY;
             for(int ti=std::max(0,tx-IMPORT_SIZE),tim=std::min(SIZE-1,tx+IMPORT_SIZE);ti<=tim;ti++)
             {
@@ -287,13 +319,17 @@ int minmax_find(std::array<std::array<int, SIZE>, SIZE> &tboard,int depth,int mi
             }
             if(minmaxmode==FINDMAX)
             {
-                if(tv>minmaxvalue)
-                    minmaxvalue=tv;
+                minmaxvalue=std::max(minmaxvalue,tv);
+                a=std::max(a,minmaxvalue);
+                if(a>=b)
+                    break;
             }
             else
             {
-                if(tv<minmaxvalue)
-                    minmaxvalue=tv;
+                minmaxvalue=std::min(minmaxvalue,tv);
+                b=std::min(b,minmaxvalue);
+                if(a>=b)
+                    break;
             }
         }
         tx++;
@@ -312,17 +348,19 @@ int minmax_find(std::array<std::array<int, SIZE>, SIZE> &tboard,int depth,int mi
 
 void write_valid_spot(std::ofstream& fout) {
     srand(time(NULL));
-    int x = 0;//(rand() % SIZE);
-    int y = 0;//(rand() % SIZE);
+    int x = (rand() % SIZE);
+    int y = (rand() % SIZE);
+    fout << 7 << " " << 7 << std::endl;
+    fout.flush();
     int tx=x;
     int ty=y;
-    const int print_depth=4;
+    const int print_depth=0;
     int depth=4;
     int maxvalue=INT_MIN;
     int minmaxmode=FINDMAX;
     int board_value=0;//value_fun(board,player,3-player);
-    print_board(import_board);
-    std::cout<<board_value<<std::endl;
+    //print_board(import_board);
+    //std::cout<<board_value<<std::endl;
     // Keep updating the output until getting killed.
     while(true) {
         // Choose a random spot.
@@ -342,7 +380,7 @@ void write_valid_spot(std::ofstream& fout) {
                     import_board[ti][tj]+=1;
                 }
             }
-            int tv=minmax_find(board,depth-1,1-minmaxmode,3-player,tx,ty,board_value);
+            int tv=minmax_find(board,depth-1,1-minmaxmode,3-player,tx,ty,board_value,INT_MIN,INT_MAX);
             board[tx][ty]=EMPTY;
             for(int ti=std::max(0,tx-IMPORT_SIZE),tim=std::min(SIZE-1,tx+IMPORT_SIZE);ti<=tim;ti++)
             {
@@ -352,8 +390,8 @@ void write_valid_spot(std::ofstream& fout) {
                 }
             }
             if(depth==print_depth)
-                std::cout<<tv<<" ";
-            if(tv>maxvalue)
+                std::cout<<tv<<"\t";
+            if(tv>maxvalue||maxvalue==INT_MIN)
             {
                 maxvalue=tv;
                 fout << tx << " " << ty << std::endl;
@@ -363,11 +401,11 @@ void write_valid_spot(std::ofstream& fout) {
         else if(depth==print_depth)
         {
             if(board[tx][ty]==BLACK)
-                std::cout<<"B ";
+                std::cout<<"B\t";
             if(board[tx][ty]==WHITE)
-                std::cout<<"W ";
+                std::cout<<"W\t";
             if(import_board[tx][ty]==0)
-                std::cout<<"X ";
+                std::cout<<"X\t";
         }
         ty++;
         if(ty>=SIZE)
@@ -384,16 +422,16 @@ void write_valid_spot(std::ofstream& fout) {
         if(tx==x&&ty==y)
         {
             depth++;
-            break;
+            while(1);
         }
     }
 }
 
 int main(int, char** argv) {
-    std::ifstream fin("state");
-    std::ofstream fout("action");
-    //std::ifstream fin(argv[1]);
-    //std::ofstream fout(argv[2]);
+    //std::ifstream fin("state");
+    //std::ofstream fout("action");
+    std::ifstream fin(argv[1]);
+    std::ofstream fout(argv[2]);
     read_board(fin);
     write_valid_spot(fout);
     fin.close();
