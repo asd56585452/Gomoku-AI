@@ -1,1 +1,1 @@
-alpha-beta pruning 版本
+活三活四 版本
