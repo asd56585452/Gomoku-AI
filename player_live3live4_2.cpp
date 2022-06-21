@@ -4,6 +4,7 @@
 #include <ctime>
 #include <array>
 #include <algorithm>
+#include <vector>
 
 enum SPOT_STATE {
     EMPTY = 0,
@@ -13,7 +14,7 @@ enum SPOT_STATE {
 
 int player;
 const int SIZE = 15;
-const int IMPORT_SIZE = 2;
+const int IMPORT_SIZE = 1;
 std::array<std::array<int, SIZE>, SIZE> board;
 std::array<std::array<int, SIZE>, SIZE> import_board;
 
@@ -68,7 +69,7 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
         if(t-tt-1==3)
         {
             if(t+x<SIZE&&tboard[t+x][y]==EMPTY&&tt+x>=0&&tboard[tt+x][y]==EMPTY)
-                value+=5;
+                value+=6;
             else if((t+x>=SIZE||tboard[t+x][y]==opponent_state)&&(tt+x<0&&tboard[tt+x][y]==opponent_state))
                 value+=0;
             else
@@ -93,7 +94,7 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
         if(t-tt-1==3)
         {
             if(t+y<SIZE&&tboard[x][t+y]==EMPTY&&tt+y>=0&&tboard[x][tt+y]==EMPTY)
-                value+=5;
+                value+=6;
             else if((t+x>=SIZE||tboard[x][t+y]==opponent_state)&&(tt+x<0&&tboard[x][tt+y]==opponent_state))
                 value+=0;
             else
@@ -118,7 +119,7 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
         if(t-tt-1==3)
         {
             if(t+x<SIZE&&t+y<SIZE&&tboard[t+x][t+y]==EMPTY&&tt+x>=0&&tt+y>=0&&tboard[tt+x][tt+y]==EMPTY)
-                value+=5;
+                value+=6;
             else if((t+x>=SIZE||t+y>=SIZE||tboard[t+x][t+y]==opponent_state)&&(tt+x<0||tt+y<0||tboard[tt+x][tt+y]==opponent_state))
                 value+=0;
             else
@@ -143,7 +144,7 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
         if(t-tt-1==3)
         {
             if(t+x<SIZE&&-t+y>=0&&tboard[t+x][-t+y]==EMPTY&&tt+x>=0&&-tt+y<SIZE&&tboard[tt+x][-tt+y]==EMPTY)
-                value+=5;
+                value+=6;
             else if((t+x>=SIZE||-t+y<SIZE||tboard[t+x][-t+y]==opponent_state)&&(tt+x<0||-tt+y>=SIZE||tboard[tt+x][-tt+y]==opponent_state))
                 value+=0;
             else
@@ -175,7 +176,7 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
         if(t-tt-1==3)
         {
             if(t+x<SIZE&&tboard[t+x][y]==EMPTY&&tt+x>=0&&tboard[tt+x][y]==EMPTY)
-                value+=-5;
+                value+=-6;
             else if((t+x>=SIZE||tboard[t+x][y]==opponent_state)&&(tt+x<0&&tboard[tt+x][y]==opponent_state))
                 value+=-0;
             else
@@ -200,7 +201,7 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
         if(t-tt-1==3)
         {
             if(t+y<SIZE&&tboard[x][t+y]==EMPTY&&tt+y>=0&&tboard[x][tt+y]==EMPTY)
-                value+=-5;
+                value+=-6;
             else if((t+x>=SIZE||tboard[x][t+y]==opponent_state)&&(tt+x<0&&tboard[x][tt+y]==opponent_state))
                 value+=-0;
             else
@@ -225,7 +226,7 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
         if(t-tt-1==3)
         {
             if(t+x<SIZE&&t+y<SIZE&&tboard[t+x][t+y]==EMPTY&&tt+x>=0&&tt+y>=0&&tboard[tt+x][tt+y]==EMPTY)
-                value+=-5;
+                value+=-6;
             else if((t+x>=SIZE||t+y>=SIZE||tboard[t+x][t+y]==opponent_state)&&(tt+x<0||tt+y<0||tboard[tt+x][tt+y]==opponent_state))
                 value+=-0;
             else
@@ -250,7 +251,7 @@ int discs_increase_value(std::array<std::array<int, SIZE>, SIZE> &tboard,int x,i
         if(t-tt-1==3)
         {
             if(t+x<SIZE&&-t+y>=0&&tboard[t+x][-t+y]==EMPTY&&tt+x>=0&&-tt+y<SIZE&&tboard[tt+x][-tt+y]==EMPTY)
-                value+=-5;
+                value+=-6;
             else if((t+x>=SIZE||-t+y<SIZE||tboard[t+x][-t+y]==opponent_state)&&(tt+x<0||-tt+y>=SIZE||tboard[tt+x][-tt+y]==opponent_state))
                 value+=-0;
             else
@@ -368,8 +369,8 @@ int minmax_find(std::array<std::array<int, SIZE>, SIZE> &tboard,int depth,int mi
     board_value+=tv;
     if(depth==0)
         return board_value;
-    int x = (rand() % SIZE);
-    int y = (rand() % SIZE);
+    int x = 0;//(rand() % SIZE);
+    int y = 0;//(rand() % SIZE);
     int tx=x;
     int ty=y;
     int minmaxvalue;
@@ -435,8 +436,10 @@ void write_valid_spot(std::ofstream& fout) {
     fout.flush();
     int tx=x;
     int ty=y;
-    const int print_depth=4;
-    int depth=4;
+    int outx;
+    int outy;
+    const int print_depth=0;
+    int depth=3;
     int maxvalue=INT_MIN;
     int minmaxmode=FINDMAX;
     int import_value=INT_MIN;
@@ -477,13 +480,19 @@ void write_valid_spot(std::ofstream& fout) {
             {
                 import_value=import_board[tx][ty];
                 maxvalue=tv;
-                fout << tx << " " << ty << std::endl;
+                outx=tx;
+                outy=ty;
+                //fout << tx << " " << ty << std::endl;
+                //fout.flush();
             }
             else if(import_board[tx][ty]>import_value&&tv==maxvalue)
             {
                 import_value=import_board[tx][ty];
                 maxvalue=tv;
-                fout << tx << " " << ty << std::endl;
+                outx=tx;
+                outy=ty;
+                //fout << tx << " " << ty << std::endl;
+                //fout.flush();
             }
         }
         else if(depth==print_depth)
@@ -509,9 +518,11 @@ void write_valid_spot(std::ofstream& fout) {
         }
         if(tx==x&&ty==y)
         {
+            fout << outx << " " << outy << std::endl;
             fout.flush();
             depth++;
-            break;
+            maxvalue=INT_MIN;
+            import_value=INT_MIN;
         }
     }
 }
